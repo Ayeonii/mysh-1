@@ -1,17 +1,44 @@
 #include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <signal.h>
 #include "commands.h"
 #include "built_in.h"
 #include "utils.h"
+#include "signal_handlers.h"
 
+int signal_count = 0;
 int main()
 {
+  int b_sigcount;
+  int a_sigcount;
+  int result;
   char buf[8096];
 
   while (1) {
-    fgets(buf, 8096, stdin);
+
+	signal(SIGINT, (void*)catch_sigint);
+	signal(SIGTSTP,(void*)catch_sigtstp);
+
+
+
+        fgets(buf, 8096, stdin);
+
+	while(signal_count !=0)
+	{	
+		b_sigcount = signal_count;
+		fgets(buf, 8096,stdin);
+		a_sigcount = signal_count;
+		result = a_sigcount - b_sigcount;
+
+ 		if(result ==0)
+		{
+			signal_count =0;
+			break;
+		}
+	}
 
     struct single_command commands[512];
     int n_commands = 0;
